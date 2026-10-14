@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/* Hide scrollbar globally for elements with scrollbar-hide class */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+@layer utilities {
+  .animate-neon-pulse {
+    animation: neon-pulse 1s infinite alternate;
+  }
+}
+
+@keyframes neon-pulse {
+  0% {
+    box-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 0 0 10px rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.8);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.9), 0 0 30px rgba(255, 255, 255, 0.9);
+    border-color: rgba(255, 255, 255, 1);
+  }
+}
