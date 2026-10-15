@@ -7,6 +7,8 @@ import useCartStore from '../store/useCartStore';
 import LocationSelector from './LocationSelector';
 import serviGoLogo from '../assets/servigo-logo.jpg';
 
+import ServiGoLogo from './ServiGoLogo';
+
 export default function Header() {
   const navigate = useNavigate();
   const { location, searchQuery, setSearchQuery, setSelectedCategory } = useAppStore();
@@ -27,37 +29,18 @@ export default function Header() {
 
   return (
     <>
-      <header className="sticky top-0 z-50 backdrop-blur-2xl border-b border-[#ff6b00]/15 shadow-[0_8px_32px_rgba(0,0,0,0.6)]" style={{ background: 'linear-gradient(to bottom, rgba(30, 26, 23, 0.97), rgba(25, 22, 20, 0.95))' }}>
-        {/* Warm accent glow line at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 h-[3px]" style={{ background: 'linear-gradient(to right, transparent, rgba(255,107,0,0.5) 30%, rgba(255,107,0,0.7) 50%, rgba(255,107,0,0.5) 70%, transparent)' }} />
-        {/* Top highlight line */}
-        <div className="absolute top-0 left-0 right-0 h-px" style={{ background: 'linear-gradient(to right, transparent, rgba(255,255,255,0.12) 30%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.12) 70%, transparent)' }} />
-        
+      <header className="sticky top-0 z-50 bg-[#090d16]/95 backdrop-blur-xl border-b border-white/[0.07] transition-all">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20 sm:h-[88px]">
+          <div className="flex items-center justify-between h-20">
             
             {/* Logo */}
-            <Link to={isDelivery ? "/delivery" : "/"} className="flex items-center space-x-3 group shrink-0">
-              <div className="relative shrink-0">
-                <img 
-                  src="/uploads/servigo-icon.png" 
-                  alt="Logo" 
-                  className="h-[76px] sm:h-[88px] w-auto object-contain drop-shadow-[0_4px_12px_rgba(255,0,0,0.3)] group-hover:drop-shadow-[0_4px_20px_rgba(255,0,0,0.6)] group-hover:scale-105 transition-all duration-300"
-                />
-              </div>
-              <div className="hidden sm:flex flex-col justify-center">
-                <span className="text-2xl sm:text-3xl font-black tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#ff6b00] via-[#ff8c00] to-[#ff3b00] drop-shadow-[0_2px_4px_rgba(255,107,0,0.4)] leading-none mb-1">
-                  Servi-Go
-                </span>
-                <span className="text-[10px] sm:text-xs font-bold text-zinc-400 tracking-[0.2em] uppercase leading-none">
-                  Directorio Local
-                </span>
-              </div>
+            <Link to={isDelivery ? "/delivery" : "/"} className="shrink-0 focus:outline-none">
+              <ServiGoLogo />
             </Link>
 
             {/* Search Bar - Desktop */}
             {!isDelivery && (
-              <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-xl mx-6">
+              <form onSubmit={handleSearch} className="hidden md:flex flex-1 max-w-2xl mx-8">
                 <div className="relative w-full group flex items-center">
                   <Search className="absolute left-4 w-4 h-4 text-zinc-400 group-focus-within:text-[#ff6b00] transition-colors duration-200 pointer-events-none" />
                   <input
@@ -65,8 +48,7 @@ export default function Header() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="¿Qué servicio o negocio estás buscando en Yaguará?"
-                    className="w-full border border-white/[0.15] rounded-full pl-11 pr-12 py-2.5 text-sm text-white placeholder-zinc-400 focus:outline-none focus:border-[#ff6b00]/60 focus:ring-2 focus:ring-[#ff6b00]/25 hover:border-white/25 transition-all duration-200"
-                    style={{ background: 'rgba(10, 10, 15, 0.55)' }}
+                    className="w-full bg-[#131b26]/90 border border-white/[0.1] rounded-full pl-11 pr-11 py-2.5 text-sm text-white placeholder-zinc-400 focus:outline-none focus:border-[#ff6b00]/60 focus:ring-1 focus:ring-[#ff6b00]/30 hover:border-white/20 transition-all duration-200"
                   />
                   <button type="button" className="absolute right-4 text-zinc-400 hover:text-white transition-colors" title="Filtros">
                     <SlidersHorizontal className="w-4 h-4" />
@@ -82,11 +64,11 @@ export default function Header() {
               {!isDelivery && (
                 <button 
                   onClick={() => setShowLocationSelector(true)}
-                  className="hidden sm:flex items-center space-x-2 text-sm font-bold text-zinc-200 hover:text-white bg-transparent px-4 py-2 rounded-full border border-white/[0.15] hover:border-[#ff6b00]/30 transition-all duration-200"
+                  className="hidden sm:flex items-center space-x-2 text-sm font-semibold text-white bg-[#131b26] hover:bg-[#1a2433] px-4 py-2 rounded-full border border-white/[0.1] hover:border-white/20 transition-all duration-200"
                 >
                   <MapPin className="w-4 h-4 text-[#ff6b00]" />
                   <span className="max-w-[100px] truncate">{location}</span>
-                  <ChevronDown className="w-4 h-4 text-zinc-500" />
+                  <ChevronDown className="w-4 h-4 text-zinc-400" />
                 </button>
               )}
 
@@ -94,7 +76,7 @@ export default function Header() {
               {!isDelivery && !isAdmin && (
                 <button 
                   onClick={toggleCart}
-                  className="relative flex items-center justify-center w-10 h-10 rounded-full bg-transparent border border-white/[0.15] hover:bg-white/[0.15] hover:border-[#ff6b00]/30 transition-all duration-200"
+                  className="relative flex items-center justify-center w-10 h-10 rounded-full bg-[#131b26] border border-white/[0.1] hover:bg-[#1a2433] hover:border-white/20 transition-all duration-200"
                 >
                   <ShoppingCart className="w-4 h-4 text-zinc-300" />
                   {cartItems.length > 0 && (
