@@ -24,13 +24,15 @@ import {
   MapPin, 
   Target,
   PenTool,
-  Hotel
+  Hotel,
+  Sparkles
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useAppStore from '../store/useAppStore';
 import usePromotionsStore from '../store/usePromotionsStore';
 import BusinessCard from '../components/BusinessCard';
 import InteractiveMap from '../components/InteractiveMap';
+import PromotionCheckoutModal from '../components/PromotionCheckoutModal';
 import { MOCK_BUSINESSES } from '../data/mockData';
 
 const CATEGORIES = [
@@ -50,6 +52,7 @@ export default function HomeView() {
   const { location, searchQuery, businessType, setBusinessType, selectedCategory, setSelectedCategory } = useAppStore();
   const [showMap, setShowMap] = useState(false);
   const [onlyVerified, setOnlyVerified] = useState(false);
+  const [isPromoCheckoutOpen, setIsPromoCheckoutOpen] = useState(false);
 
   const activeCategory = selectedCategory || 'all';
 
@@ -205,33 +208,44 @@ export default function HomeView() {
         <div className="animate-in fade-in slide-in-from-top-4 duration-500">
           
           {/* Header */}
-          <div className="flex items-center justify-between mb-4 px-1">
-            <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 px-1">
+            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
               <Megaphone className="w-6 h-6 text-[#ff6b00]" strokeWidth={2.5} />
               <h3 className="text-2xl font-black text-white tracking-tight">
                 Promociones destacadas
               </h3>
-              <span className="hidden sm:inline-flex items-center gap-1.5 bg-[#ff6b00]/10 text-[#ff6b00] text-xs font-bold px-3 py-1 rounded-full border border-[#ff6b00]/30 ml-2">
+              <span className="inline-flex items-center gap-1.5 bg-[#ff6b00]/10 text-[#ff6b00] text-xs font-bold px-3 py-1 rounded-full border border-[#ff6b00]/30">
                 <Clock className="w-3.5 h-3.5" /> Por tiempo limitado
               </span>
             </div>
 
-            {/* Navigation Arrows */}
-            <div className="flex items-center gap-2">
+            {/* Action Buttons & Navigation */}
+            <div className="flex items-center gap-3">
               <button 
                 type="button"
-                className="w-8 h-8 rounded-full bg-[#131b26] hover:bg-[#1a2433] border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
-                title="Anterior"
+                onClick={() => setIsPromoCheckoutOpen(true)}
+                className="flex items-center gap-1.5 text-xs font-extrabold text-white bg-gradient-to-r from-[#ff6b00] to-[#ff4500] hover:from-[#ff7700] hover:to-[#ff5500] px-4 py-2 rounded-full shadow-[0_2px_12px_rgba(255,107,0,0.35)] transition-all hover:scale-105"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Pautar mi negocio ($10.000 / 24h)</span>
               </button>
-              <button 
-                type="button"
-                className="w-8 h-8 rounded-full bg-[#131b26] hover:bg-[#1a2433] border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
-                title="Siguiente"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+
+              <div className="flex items-center gap-2">
+                <button 
+                  type="button"
+                  className="w-8 h-8 rounded-full bg-[#131b26] hover:bg-[#1a2433] border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                  title="Anterior"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+                <button 
+                  type="button"
+                  className="w-8 h-8 rounded-full bg-[#131b26] hover:bg-[#1a2433] border border-white/10 flex items-center justify-center text-zinc-400 hover:text-white transition-colors"
+                  title="Siguiente"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
 
@@ -506,6 +520,12 @@ export default function HomeView() {
           <p className="text-gray-400">Intenta seleccionar otra categoría o cambiar los filtros.</p>
         </div>
       )}
+
+      {/* Promotion Checkout Modal ($10.000 COP / 24h) */}
+      <PromotionCheckoutModal 
+        isOpen={isPromoCheckoutOpen}
+        onClose={() => setIsPromoCheckoutOpen(false)}
+      />
     </div>
   );
 }

@@ -14,15 +14,19 @@ import {
   Trash2,
   CheckCircle2,
   AlertCircle,
-  Megaphone
+  Megaphone,
+  Sparkles,
+  CreditCard
 } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
-import usePromotionsStore from '../store/usePromotionsStore';
+import usePromotionsStore, { PROMOTION_FEE } from '../store/usePromotionsStore';
 import ProviderInboxModal from '../components/ProviderInboxModal';
+import PromotionCheckoutModal from '../components/PromotionCheckoutModal';
 
 export default function ProviderDashboard({ provider }) {
   const [activeTab, setActiveTab] = useState('promotions');
   const [isInboxOpen, setIsInboxOpen] = useState(false);
+  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
   const addPromotion = usePromotionsStore(state => state.addPromotion);
   const promotions = usePromotionsStore(state => state.promotions);
   const providerPromotions = promotions.filter(p => p.providerId === provider.id);
@@ -35,17 +39,8 @@ export default function ProviderDashboard({ provider }) {
     if (newPromo.promoType === 'fixed' && !newPromo.price) return;
     if (newPromo.promoType === 'percentage' && !newPromo.discountPercentage) return;
     
-    addPromotion({
-      ...newPromo,
-      price: newPromo.promoType === 'fixed' ? parseInt(newPromo.price, 10) : null,
-      discountPercentage: newPromo.promoType === 'percentage' ? parseInt(newPromo.discountPercentage, 10) : null,
-      image: newPromo.image || 'https://images.unsplash.com/photo-1512428559087-560fa5ceab42?auto=format&fit=crop&q=80&w=400',
-      providerId: provider.id,
-      providerName: provider.name
-    });
-    
-    setNewPromo({ title: '', description: '', promoType: 'fixed', price: '', discountPercentage: '', image: '', color: 'from-[#ff6b00] to-[#ff4500]' });
-    alert('Promoción publicada con éxito por 24 horas');
+    // Abre el modal de pago de 10 mil pesos
+    setIsCheckoutOpen(true);
   };
 
   // Tab configuration
@@ -172,17 +167,38 @@ export default function ProviderDashboard({ provider }) {
       {/* PROMOTIONS TAB */}
       {activeTab === 'promotions' && (
         <div className="space-y-6 animate-in fade-in">
-          <div className="bg-[#1a1a24] p-6 rounded-3xl border border-white/5">
+          <div className="bg-[#1a1a24] p-6 sm:p-7 rounded-3xl border border-white/5">
+            {/* Pricing Highlight Banner */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-2xl bg-[#121927] border border-[#ff6b00]/30 mb-6 shadow-inner">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#ff6b00]/20 border border-[#ff6b00]/40 flex items-center justify-center text-[#ff6b00] shrink-0">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <h4 className="text-white font-bold text-sm">Tarifa de Publicidad Destacada</h4>
+                  <p className="text-zinc-400 text-xs">Aparición prioritaria en el carrusel de portada de Servi-Go</p>
+                </div>
+              </div>
+              <div className="flex items-baseline gap-1.5 self-end sm:self-auto">
+                <span className="text-2xl font-black text-[#ff6b00]">
+                  ${PROMOTION_FEE.toLocaleString('es-CO')} COP
+                </span>
+                <span className="text-xs text-zinc-400 font-semibold">/ 24 horas</span>
+              </div>
+            </div>
+
             <h2 className="text-xl font-bold text-white mb-2 flex items-center gap-2">
               <Megaphone className="w-5 h-5 text-[#ff6b00]" /> Crear Promoción Flash
             </h2>
-            <p className="text-sm text-gray-400 mb-6">Esta promoción aparecerá destacada en la página principal (Home) para todos los usuarios durante 24 horas.</p>
+            <p className="text-sm text-gray-400 mb-6">
+              Esta promoción aparecerá destacada en la página principal (Home) para todos los usuarios durante 24 horas continuas tras confirmar el pago.
+            </p>
             
             <form onSubmit={handleCreatePromo} className="space-y-4 max-w-xl">
               <div>
                 <label className="text-xs font-bold text-gray-300 block mb-1">Título de la Promoción</label>
                 <input 
-                  type="text"
+                  type="text" 
                   value={newPromo.title}
                   onChange={e => setNewPromo({...newPromo, title: e.target.value})}
                   placeholder="Ej. ¡2x1 en Hamburguesas!"
@@ -282,16 +298,17 @@ export default function ProviderDashboard({ provider }) {
               <div>
                 <label className="text-xs font-bold text-gray-300 block mb-1">Color de Fondo</label>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => setNewPromo({...newPromo, color: 'from-[#ff6b00] to-[#ff4500]'})} className={`w-10 h-10 rounded-full bg-gradient-to-br from-[#ff6b00] to-[#ff4500] border-2 ${newPromo.color === 'from-[#ff6b00] to-[#ff4500]' ? 'border-white' : 'border-transparent'}`}></button>
-                  <button type="button" onClick={() => setNewPromo({...newPromo, color: 'from-blue-600 to-indigo-700'})} className={`w-10 h-10 rounded-full bg-gradient-to-br from-blue-600 to-indigo-700 border-2 ${newPromo.color === 'from-blue-600 to-indigo-700' ? 'border-white' : 'border-transparent'}`}></button>
-                  <button type="button" onClick={() => setNewPromo({...newPromo, color: 'from-green-600 to-emerald-700'})} className={`w-10 h-10 rounded-full bg-gradient-to-br from-green-600 to-emerald-700 border-2 ${newPromo.color === 'from-green-600 to-emerald-700' ? 'border-white' : 'border-transparent'}`}></button>
-                  <button type="button" onClick={() => setNewPromo({...newPromo, color: 'from-purple-600 to-fuchsia-700'})} className={`w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-fuchsia-700 border-2 ${newPromo.color === 'from-purple-600 to-fuchsia-700' ? 'border-white' : 'border-transparent'}`}></button>
+                  <button type="button" onClick={() => setNewPromo({...newPromo, color: 'from-[#ff5500] via-[#ff6a00] to-[#e64700]'})} className={`w-10 h-10 rounded-full bg-gradient-to-br from-[#ff5500] to-[#e64700] border-2 ${newPromo.color === 'from-[#ff5500] via-[#ff6a00] to-[#e64700]' ? 'border-white scale-110' : 'border-transparent'}`}></button>
+                  <button type="button" onClick={() => setNewPromo({...newPromo, color: 'from-[#0052cc] via-[#0066ff] to-[#0040aa]'})} className={`w-10 h-10 rounded-full bg-gradient-to-br from-[#0052cc] to-[#0040aa] border-2 ${newPromo.color === 'from-[#0052cc] via-[#0066ff] to-[#0040aa]' ? 'border-white scale-110' : 'border-transparent'}`}></button>
+                  <button type="button" onClick={() => setNewPromo({...newPromo, color: 'from-[#2b080b] via-[#3d0f15] to-[#150406]'})} className={`w-10 h-10 rounded-full bg-gradient-to-br from-[#2b080b] to-[#150406] border-2 ${newPromo.color === 'from-[#2b080b] via-[#3d0f15] to-[#150406]' ? 'border-white scale-110' : 'border-transparent'}`}></button>
+                  <button type="button" onClick={() => setNewPromo({...newPromo, color: 'from-[#059669] via-[#10b981] to-[#047857]'})} className={`w-10 h-10 rounded-full bg-gradient-to-br from-[#059669] to-[#047857] border-2 ${newPromo.color === 'from-[#059669] via-[#10b981] to-[#047857]' ? 'border-white scale-110' : 'border-transparent'}`}></button>
                 </div>
               </div>
               
               <div className="pt-2">
-                <button type="submit" className="bg-[#ff6b00] hover:bg-[#ff8533] text-white font-bold py-3 px-6 rounded-xl transition-colors shadow-lg shadow-[#ff6b00]/20 flex items-center gap-2">
-                  <Megaphone className="w-4 h-4" /> Publicar Anuncio (24h)
+                <button type="submit" className="bg-gradient-to-r from-[#ff6b00] to-[#ff4500] hover:from-[#ff7700] hover:to-[#ff5500] text-white font-extrabold py-3.5 px-7 rounded-xl transition-all shadow-lg shadow-[#ff6b00]/25 flex items-center gap-2">
+                  <CreditCard className="w-4 h-4" /> 
+                  <span>Proceder al Pago y Publicar (${PROMOTION_FEE.toLocaleString('es-CO')} COP)</span>
                 </button>
               </div>
             </form>
@@ -518,6 +535,28 @@ export default function ProviderDashboard({ provider }) {
         isOpen={isInboxOpen} 
         onClose={() => setIsInboxOpen(false)} 
         providerName={provider.name}
+      />
+
+      {/* Promotion Checkout Modal */}
+      <PromotionCheckoutModal 
+        isOpen={isCheckoutOpen}
+        onClose={() => setIsCheckoutOpen(false)}
+        initialData={{
+          providerId: provider.id,
+          providerName: provider.name,
+          title: newPromo.title,
+          description: newPromo.description,
+          promoType: newPromo.promoType,
+          price: newPromo.price,
+          discountPercentage: newPromo.discountPercentage,
+          image: newPromo.image,
+          color: newPromo.color,
+          directPayment: true
+        }}
+        onSuccess={() => {
+          setIsCheckoutOpen(false);
+          setNewPromo({ title: '', description: '', promoType: 'fixed', price: '', discountPercentage: '', image: '', color: 'from-[#ff5500] via-[#ff6a00] to-[#e64700]' });
+        }}
       />
     </div>
   );
