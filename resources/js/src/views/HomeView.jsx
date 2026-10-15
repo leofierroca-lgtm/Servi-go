@@ -95,11 +95,11 @@ export default function HomeView() {
         
         {/* Background Church Image & Smooth Transition */}
         <div className="absolute inset-0 z-0 overflow-hidden">
-          {/* Church of Yaguará image on the right */}
+          {/* Parque Principal de Yaguará image on the right */}
           <div 
-            className="absolute right-0 top-0 bottom-0 w-full md:w-[62%] lg:w-[56%] bg-cover bg-center transition-transform duration-1000 group-hover:scale-105"
+            className="absolute right-0 top-0 bottom-0 w-full md:w-[62%] lg:w-[56%] bg-cover bg-[position:75%_center] sm:bg-[position:70%_center] transition-transform duration-1000 group-hover:scale-105"
             style={{ 
-              backgroundImage: "url('/images/iglesia_yaguara.jpg')",
+              backgroundImage: "url('/images/parque_yaguara.jpg')",
             }}
           />
 
