@@ -105,6 +105,22 @@ export default function PromotionCheckoutModal({
         setCompletedPayment(paymentRecord);
         setStep('success');
 
+        // Persist to Laravel MySQL database
+        fetch('/api/promotions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          body: JSON.stringify({
+            businessId: providerId || 1,
+            plan: 'destacado_24h',
+            amount: PROMOTION_FEE,
+            durationHours: 24,
+            paymentReference: paymentData?.reference || `REF-${Date.now()}`
+          })
+        }).catch(err => console.warn('API promo sync error:', err));
+
         if (onSuccess) {
           onSuccess(paymentRecord);
         }

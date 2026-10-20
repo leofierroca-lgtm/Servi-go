@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Star, MapPin, ShieldCheck, Heart, QrCode, Store, Zap, MessageSquare, ArrowRight } from 'lucide-react';
+import { Star, MapPin, ShieldCheck, Heart, QrCode, Store, Zap, MessageSquare, ArrowRight, Wrench } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import useAppStore from '../store/useAppStore';
 import useAuthStore from '../store/useAuthStore';
@@ -26,11 +26,34 @@ export default function BusinessCard({ business }) {
     navigate(`/provider/${business.id}`);
   };
 
+  const isService = business.type === 'service' || business.type === 'services';
+
   return (
     <div 
       onClick={handleProfileClick}
       className="relative rounded-[1.5rem] overflow-hidden border border-white/10 hover:border-white/20 transition-all group cursor-pointer shadow-2xl flex flex-col aspect-[4/5] w-full"
     >
+      {/* Type Badge: Servicio vs Comercio */}
+      <div className="absolute top-4 left-4 z-20">
+        <span className={`px-2.5 py-1 rounded-full backdrop-blur-md border text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 shadow-lg ${
+          isService
+            ? 'bg-blue-950/80 border-blue-400/40 text-blue-300' 
+            : 'bg-amber-950/80 border-amber-400/40 text-amber-300'
+        }`}>
+          {isService ? (
+            <>
+              <Wrench className="w-3 h-3 text-blue-300" />
+              <span>Servicio</span>
+            </>
+          ) : (
+            <>
+              <Store className="w-3 h-3 text-amber-300" />
+              <span>Comercio</span>
+            </>
+          )}
+        </span>
+      </div>
+
       {/* Favorite Button */}
       <button 
         onClick={handleFavoriteClick}

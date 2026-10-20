@@ -25,7 +25,12 @@ import {
   Target,
   PenTool,
   Hotel,
-  Sparkles
+  Sparkles,
+  SlidersHorizontal,
+  RotateCcw,
+  X,
+  Filter,
+  Check
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useAppStore from '../store/useAppStore';
@@ -33,19 +38,26 @@ import usePromotionsStore from '../store/usePromotionsStore';
 import BusinessCard from '../components/BusinessCard';
 import InteractiveMap from '../components/InteractiveMap';
 import PromotionCheckoutModal from '../components/PromotionCheckoutModal';
+import BusinessAdBanner from '../components/BusinessAdBanner';
 import { MOCK_BUSINESSES } from '../data/mockData';
 
 const CATEGORIES = [
-  { id: 'all', label: 'Todos los Rubros', icon: <List className="w-4 h-4 mr-2" /> },
-  { id: 'tecnologia', label: 'Tecnología y Telefonía', icon: <Zap className="w-4 h-4 mr-2" /> },
-  { id: 'belleza', label: 'Belleza y Estética', icon: <Coffee className="w-4 h-4 mr-2" /> },
-  { id: 'comidas_tipicas', label: 'Comidas Típicas & Quesillos', icon: <Utensils className="w-4 h-4 mr-2" /> },
-  { id: 'electricistas', label: 'Electricistas', icon: <Zap className="w-4 h-4 mr-2" /> },
-  { id: 'transporte', label: 'Transporte Público', icon: <Truck className="w-4 h-4 mr-2" /> },
-  { id: 'droguerias', label: 'Droguerías', icon: <Pill className="w-4 h-4 mr-2" /> },
-  { id: 'domicilios', label: 'Mensajería & Domicilios', icon: <Bike className="w-4 h-4 mr-2" /> },
-  { id: 'acarreos', label: 'Acarreos y Mudanzas', icon: <Package className="w-4 h-4 mr-2" /> },
-  { id: 'maestros', label: 'Maestros de Obra', icon: <HardHat className="w-4 h-4 mr-2" /> }
+  { id: 'all', label: 'Todos los Rubros', icon: <List className="w-4 h-4 mr-1.5" /> },
+  { id: 'comidas_rapidas', label: 'Comidas Rápidas', icon: <Utensils className="w-4 h-4 mr-1.5" /> },
+  { id: 'comidas_tipicas', label: 'Comidas Típicas & Quesillos', icon: <Utensils className="w-4 h-4 mr-1.5" /> },
+  { id: 'tecnologia', label: 'Tecnología y Telefonía', icon: <Zap className="w-4 h-4 mr-1.5" /> },
+  { id: 'belleza', label: 'Belleza, Barbería & Spa', icon: <Coffee className="w-4 h-4 mr-1.5" /> },
+  { id: 'hoteles', label: 'Hoteles & Hospedaje', icon: <Hotel className="w-4 h-4 mr-1.5" /> },
+  { id: 'supermercados', label: 'Supermercados & Víveres', icon: <Store className="w-4 h-4 mr-1.5" /> },
+  { id: 'ferreteria', label: 'Ferretería & Construcción', icon: <HardHat className="w-4 h-4 mr-1.5" /> },
+  { id: 'veterinaria', label: 'Veterinaria & Mascotas', icon: <Sparkles className="w-4 h-4 mr-1.5" /> },
+  { id: 'panaderias', label: 'Panaderías & Pastelería', icon: <Coffee className="w-4 h-4 mr-1.5" /> },
+  { id: 'transporte', label: 'Transporte Público', icon: <Truck className="w-4 h-4 mr-1.5" /> },
+  { id: 'droguerias', label: 'Droguerías', icon: <Pill className="w-4 h-4 mr-1.5" /> },
+  { id: 'domicilios', label: 'Mensajería & Domicilios', icon: <Bike className="w-4 h-4 mr-1.5" /> },
+  { id: 'acarreos', label: 'Acarreos y Mudanzas', icon: <Package className="w-4 h-4 mr-1.5" /> },
+  { id: 'electricistas', label: 'Electricistas', icon: <Zap className="w-4 h-4 mr-1.5" /> },
+  { id: 'maestros', label: 'Maestros de Obra', icon: <HardHat className="w-4 h-4 mr-1.5" /> }
 ];
 
 export default function HomeView() {
@@ -53,14 +65,107 @@ export default function HomeView() {
   const [showMap, setShowMap] = useState(false);
   const [onlyVerified, setOnlyVerified] = useState(false);
   const [isPromoCheckoutOpen, setIsPromoCheckoutOpen] = useState(false);
+  const [showCategoryDrawer, setShowCategoryDrawer] = useState(false);
+  const [isDirFilterOpen, setIsDirFilterOpen] = useState(false);
+  const [apiBusinesses, setApiBusinesses] = useState([]);
+
+  // Fetch businesses from Laravel MySQL API on mount
+  useEffect(() => {
+    let isMounted = true;
+    fetch('/api/businesses')
+      .then(res => res.ok ? res.json() : [])
+      .then(data => {
+        if (isMounted && Array.isArray(data) && data.length > 0) {
+          setApiBusinesses(data);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
+
+  const businessList = apiBusinesses.length > 0 ? apiBusinesses : MOCK_BUSINESSES;
 
   const activeCategory = selectedCategory || 'all';
 
-  const filteredBusinesses = MOCK_BUSINESSES.filter(business => {
+  const isServiceActive = businessType === 'services' || businessType === 'service';
+  const isCommerceActive = businessType === 'commerce' || businessType === 'comercios' || businessType === 'comercio';
+
+  // Counts of total, services and commerce
+  const totalCount = businessList.length;
+  const servicesCount = businessList.filter(b => b.type === 'service' || b.type === 'services').length;
+  const commerceCount = businessList.filter(b => b.type === 'commerce' || b.type === 'comercios').length;
+
+  // Handle switching business type, resetting selected category if it doesn't exist in the new type
+  const handleTypeChange = (newType) => {
+    setBusinessType(newType);
+    setIsDirFilterOpen(false);
+
+    if (selectedCategory && selectedCategory !== 'all') {
+      const isNewService = newType === 'services' || newType === 'service';
+      const isNewCommerce = newType === 'commerce' || newType === 'comercios' || newType === 'comercio';
+
+      const isValidInNewType = businessList.some(b => {
+        if (isNewService && b.type !== 'service') return false;
+        if (isNewCommerce && b.type !== 'commerce') return false;
+        return b.categoryId === selectedCategory;
+      });
+
+      if (!isValidInNewType) {
+        setSelectedCategory(null);
+      }
+    }
+  };
+
+  // Get count for a specific category within the current businessType scope
+  const getCategoryCount = (catId) => {
+    if (catId === 'all') {
+      if (isServiceActive) return servicesCount;
+      if (isCommerceActive) return commerceCount;
+      return totalCount;
+    }
+    return businessList.filter(b => {
+      if (isServiceActive && b.type !== 'service') return false;
+      if (isCommerceActive && b.type !== 'commerce') return false;
+      return b.categoryId === catId;
+    }).length;
+  };
+
+  // Dynamically filter categories based on businessType:
+  // When services: only categories with service businesses
+  // When commerce: only categories with commerce businesses
+  // When all: only categories with businesses
+  const availableCategories = CATEGORIES.filter(cat => {
+    if (cat.id === 'all') return true;
+    return getCategoryCount(cat.id) > 0;
+  });
+
+  const filteredBusinesses = businessList.filter(business => {
+    // 1. Category match
     const matchCategory = activeCategory === 'all' || business.categoryId === activeCategory;
-    const matchType = businessType === 'all' || business.type === businessType;
+
+    // 2. Strict Type match:
+    let matchType = true;
+    if (isServiceActive) {
+      matchType = business.type === 'service';
+    } else if (isCommerceActive) {
+      matchType = business.type === 'commerce';
+    } else if (businessType && businessType !== 'all') {
+      matchType = business.type === businessType;
+    }
+
+    // 3. Verified filter
     const matchVerified = !onlyVerified || business.verified;
-    return matchCategory && matchType && matchVerified;
+
+    // 4. Search query filter
+    const q = (searchQuery || '').trim().toLowerCase();
+    const matchSearch = !q || 
+      business.name?.toLowerCase().includes(q) ||
+      business.description?.toLowerCase().includes(q) ||
+      business.category?.toLowerCase().includes(q) ||
+      (business.highlights && business.highlights.some(h => h.toLowerCase().includes(q))) ||
+      (business.products && business.products.some(p => p.name?.toLowerCase().includes(q)));
+
+    return matchCategory && matchType && matchVerified && matchSearch;
   });
 
   // Calculate the closest business
@@ -133,60 +238,9 @@ export default function HomeView() {
             </h1>
 
             {/* Description */}
-            <p className="text-zinc-300 text-sm sm:text-[15px] max-w-xl mb-7 leading-relaxed font-normal">
+            <p className="text-zinc-300 text-sm sm:text-[15px] max-w-xl leading-relaxed font-normal">
               Encuentra lo que necesitas, apoya el talento local y disfruta de las mejores ofertas en un solo lugar.
             </p>
-
-            {/* Category / Filter Pills */}
-            <div className="flex flex-wrap items-center gap-2.5">
-              {/* Todos Button */}
-              <button 
-                onClick={() => { setBusinessType('all'); setOnlyVerified(false); }} 
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 ${
-                  businessType === 'all' && !onlyVerified
-                    ? 'bg-[#ff6b00] text-white shadow-[0_4px_16px_rgba(255,107,0,0.4)]' 
-                    : 'bg-[#131b26] text-zinc-300 border border-white/10 hover:border-white/20 hover:text-white'
-                }`}
-              >
-                <LayoutGrid className="w-4 h-4" /> Todos
-              </button>
-
-              {/* Servicios */}
-              <button 
-                onClick={() => { setBusinessType('services'); setOnlyVerified(false); }} 
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 ${
-                  businessType === 'services' && !onlyVerified
-                    ? 'bg-[#ff6b00] text-white shadow-[0_4px_16px_rgba(255,107,0,0.4)]' 
-                    : 'bg-[#131b26] text-zinc-300 border border-white/10 hover:border-white/20 hover:text-white'
-                }`}
-              >
-                <Wrench className="w-4 h-4" /> Servicios
-              </button>
-
-              {/* Comercios */}
-              <button 
-                onClick={() => { setBusinessType('commerce'); setOnlyVerified(false); }} 
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 ${
-                  businessType === 'commerce' && !onlyVerified
-                    ? 'bg-[#ff6b00] text-white shadow-[0_4px_16px_rgba(255,107,0,0.4)]' 
-                    : 'bg-[#131b26] text-zinc-300 border border-white/10 hover:border-white/20 hover:text-white'
-                }`}
-              >
-                <Store className="w-4 h-4" /> Comercios
-              </button>
-
-              {/* Solo verificados */}
-              <button 
-                onClick={() => setOnlyVerified(!onlyVerified)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold transition-all duration-200 ${
-                  onlyVerified
-                    ? 'bg-[#ff6b00] text-white shadow-[0_4px_16px_rgba(255,107,0,0.4)]'
-                    : 'bg-[#131b26] text-zinc-300 border border-white/10 hover:border-white/20 hover:text-white'
-                }`}
-              >
-                <ShieldCheck className="w-4 h-4 text-emerald-400" /> Solo verificados
-              </button>
-            </div>
           </div>
 
           {/* Register Business CTA Button */}
@@ -202,6 +256,9 @@ export default function HomeView() {
           </div>
         </div>
       </div>
+
+      {/* Animated Business Ad Banner (Vitrina Comercial Servi-Go) */}
+      <BusinessAdBanner onOpenPromoModal={() => setIsPromoCheckoutOpen(true)} />
 
       {/* Promociones destacadas Section */}
       {activePromotions.length > 0 && (
@@ -506,6 +563,373 @@ export default function HomeView() {
         )}
       </div>
 
+      {/* Dedicated Directory Section & Filter Controls */}
+      <div id="directorio" className="space-y-4 pt-4 scroll-mt-28">
+        
+        {/* Header & Main Info */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 pb-2 border-b border-white/[0.08]">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-widest bg-[#ff6b00]/15 text-[#ff6b00] border border-[#ff6b00]/30 shadow-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-[#ff6b00] animate-pulse" />
+                Directorio Oficial
+              </span>
+              <span className="text-zinc-600 text-xs font-semibold">•</span>
+              <span className="text-zinc-400 text-xs font-semibold">Yaguará, Huila</span>
+            </div>
+            
+            <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex flex-wrap items-center gap-3">
+              <span>Servicios y Comercios</span>
+              <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/[0.06] border border-white/10 text-zinc-300">
+                {filteredBusinesses.length} {filteredBusinesses.length === 1 ? 'establecimiento' : 'establecimientos'}
+              </span>
+            </h2>
+            <p className="text-xs sm:text-sm text-zinc-400 mt-1 font-normal">
+              Filtra entre servicios especializados, oficios y comercios de la región.
+            </p>
+          </div>
+
+          {/* Quick Active Filters Reset */}
+          <div className="flex items-center gap-2 flex-wrap">
+            {(businessType !== 'all' || activeCategory !== 'all' || onlyVerified || searchQuery) && (
+              <button
+                onClick={() => {
+                  setBusinessType('all');
+                  setSelectedCategory(null);
+                  setOnlyVerified(false);
+                  useAppStore.getState().setSearchQuery('');
+                }}
+                className="flex items-center gap-1.5 text-xs font-bold text-zinc-300 hover:text-white bg-white/[0.06] hover:bg-white/[0.12] px-3.5 py-2 rounded-full border border-white/10 transition-all hover:border-[#ff6b00]/40 group"
+              >
+                <RotateCcw className="w-3.5 h-3.5 group-hover:-rotate-90 transition-transform" />
+                <span>Restablecer filtros</span>
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Primary Filter Toolbar */}
+        <div className="bg-[#0b1017] p-2.5 sm:p-3 rounded-2xl border border-white/[0.08] shadow-xl flex flex-wrap items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+            
+            {/* 1. Botón de Filtros Desplegable en Lista (Tipo) */}
+            <div className="relative">
+              <button
+                type="button"
+                id="btn-filtro-tipo"
+                onClick={() => setIsDirFilterOpen(!isDirFilterOpen)}
+                className={`flex items-center gap-2.5 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border shadow-lg ${
+                  isServiceActive
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-400/40 shadow-blue-500/25 scale-[1.02]'
+                    : isCommerceActive
+                    ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white border-amber-400/40 shadow-amber-500/25 scale-[1.02]'
+                    : 'bg-[#131b26] text-white border-white/10 hover:border-white/20'
+                }`}
+              >
+                {isServiceActive ? (
+                  <Wrench className="w-4 h-4 text-blue-300" />
+                ) : isCommerceActive ? (
+                  <Store className="w-4 h-4 text-amber-300" />
+                ) : (
+                  <Filter className="w-4 h-4 text-[#ff6b00]" />
+                )}
+                <span>
+                  {isServiceActive
+                    ? 'Filtrar: Solo Servicios'
+                    : isCommerceActive
+                    ? 'Filtrar: Solo Comercio'
+                    : 'Filtrar: Todos'}
+                </span>
+                <span className="text-[11px] px-2 py-0.5 rounded-full bg-black/35 font-black">
+                  {isServiceActive ? servicesCount : isCommerceActive ? commerceCount : totalCount}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${isDirFilterOpen ? 'rotate-180 text-white' : ''}`} />
+              </button>
+
+              {/* Lista Desplegable flotante */}
+              {isDirFilterOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsDirFilterOpen(false)} />
+                  <div className="absolute left-0 top-full mt-2 w-72 sm:w-80 bg-[#0d131c]/98 backdrop-blur-xl border border-white/15 rounded-2xl shadow-2xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                    <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between mb-1">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-zinc-400">
+                        Seleccionar Filtro
+                      </span>
+                      {businessType !== 'all' && (
+                        <button
+                          onClick={() => handleTypeChange('all')}
+                          className="text-[11px] font-bold text-[#ff6b00] hover:underline flex items-center gap-1"
+                        >
+                          <RotateCcw className="w-3 h-3" /> Ver Todos
+                        </button>
+                      )}
+                    </div>
+
+                    <ul className="space-y-1">
+                      {/* Opción 1: Todos */}
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => handleTypeChange('all')}
+                          className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-left group ${
+                            businessType === 'all' || !businessType
+                              ? 'bg-gradient-to-r from-[#ff6b00]/20 to-[#ff4500]/10 border border-[#ff6b00]/40 text-white'
+                              : 'hover:bg-white/5 text-zinc-300 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                              businessType === 'all' || !businessType ? 'bg-[#ff6b00] text-white shadow-md shadow-[#ff6b00]/30' : 'bg-white/5 text-zinc-400 group-hover:text-white'
+                            }`}>
+                              <LayoutGrid className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-bold flex items-center gap-1.5">
+                                <span>Todos los establecimientos</span>
+                                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/10 text-zinc-300">
+                                  {totalCount}
+                                </span>
+                              </div>
+                              <div className="text-xs text-zinc-400">Mostrar servicios y comercios</div>
+                            </div>
+                          </div>
+                          {(businessType === 'all' || !businessType) && (
+                            <Check className="w-4 h-4 text-[#ff6b00]" />
+                          )}
+                        </button>
+                      </li>
+
+                      {/* Opción 2: Solo Servicios */}
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => handleTypeChange('services')}
+                          className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-left group ${
+                            isServiceActive
+                              ? 'bg-blue-600/20 border border-blue-500/40 text-white'
+                              : 'hover:bg-white/5 text-zinc-300 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                              isServiceActive ? 'bg-blue-600 text-white shadow-md shadow-blue-500/30' : 'bg-white/5 text-blue-400'
+                            }`}>
+                              <Wrench className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-bold flex items-center gap-1.5 text-blue-300">
+                                <span>Solo Servicios</span>
+                                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-200">
+                                  {servicesCount}
+                                </span>
+                              </div>
+                              <div className="text-xs text-zinc-400">Técnicos, oficios y profesionales</div>
+                            </div>
+                          </div>
+                          {isServiceActive && (
+                            <Check className="w-4 h-4 text-blue-400" />
+                          )}
+                        </button>
+                      </li>
+
+                      {/* Opción 3: Solo Comercio */}
+                      <li>
+                        <button
+                          type="button"
+                          onClick={() => handleTypeChange('commerce')}
+                          className={`w-full flex items-center justify-between px-3.5 py-3 rounded-xl transition-all text-left group ${
+                            isCommerceActive
+                              ? 'bg-amber-600/20 border border-amber-500/40 text-white'
+                              : 'hover:bg-white/5 text-zinc-300 hover:text-white'
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${
+                              isCommerceActive ? 'bg-amber-600 text-white shadow-md shadow-amber-500/30' : 'bg-white/5 text-amber-400'
+                            }`}>
+                              <Store className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-bold flex items-center gap-1.5 text-amber-300">
+                                <span>Solo Comercio</span>
+                                <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-200">
+                                  {commerceCount}
+                                </span>
+                              </div>
+                              <div className="text-xs text-zinc-400">Tiendas, locales y restaurantes</div>
+                            </div>
+                          </div>
+                          {isCommerceActive && (
+                            <Check className="w-4 h-4 text-amber-400" />
+                          )}
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* 2. Botón: Filtrar por Rubro (Colocado al lado de Filtrar comercios o servicios) */}
+            <button
+              type="button"
+              id="btn-filtrar-rubro"
+              onClick={() => setShowCategoryDrawer(!showCategoryDrawer)}
+              className={`flex items-center gap-2 px-4 sm:px-5 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 border shadow-lg ${
+                showCategoryDrawer || activeCategory !== 'all'
+                  ? 'bg-gradient-to-r from-[#ff6b00] to-[#ff4500] text-white border-[#ff6b00]/50 shadow-[#ff6b00]/25 scale-[1.02]'
+                  : 'bg-[#131b26] text-white border-white/10 hover:border-white/20'
+              }`}
+            >
+              <SlidersHorizontal className={`w-4 h-4 ${showCategoryDrawer || activeCategory !== 'all' ? 'text-white' : 'text-[#ff6b00]'}`} />
+              <span>
+                {activeCategory !== 'all'
+                  ? `Rubro: ${CATEGORIES.find(c => c.id === activeCategory)?.label || 'Rubro'}`
+                  : 'Filtrar por Rubro'}
+              </span>
+              <span className="text-[11px] px-2 py-0.5 rounded-full bg-black/35 font-black">
+                {availableCategories.length - 1}
+              </span>
+              <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${showCategoryDrawer ? 'rotate-180 text-white' : ''}`} />
+            </button>
+
+          </div>
+        </div>
+
+        {/* Collapsible Category Chips (Rubros) */}
+        {showCategoryDrawer && (
+          <div className="bg-[#0e141f] border border-white/[0.08] rounded-2xl p-4 animate-in fade-in slide-in-from-top-2 duration-300">
+            <div className="flex items-center justify-between mb-3 px-1 flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-zinc-400 uppercase tracking-wider">
+                  {isServiceActive 
+                    ? 'Rubros de Servicios' 
+                    : isCommerceActive 
+                    ? 'Rubros de Comercio' 
+                    : 'Seleccionar Rubro Específico'}
+                </span>
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white/10 text-zinc-300">
+                  {availableCategories.length - 1} {availableCategories.length - 1 === 1 ? 'rubro disponible' : 'rubros disponibles'}
+                </span>
+              </div>
+
+              {activeCategory !== 'all' && (
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className="text-xs text-[#ff6b00] hover:underline font-bold flex items-center gap-1"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>
+                    {isServiceActive 
+                      ? 'Ver todos los servicios' 
+                      : isCommerceActive 
+                      ? 'Ver todos los comercios' 
+                      : 'Ver todos los rubros'}
+                  </span>
+                </button>
+              )}
+            </div>
+            
+            <div className="flex flex-wrap gap-2">
+              {availableCategories.map(cat => {
+                const isSelected = activeCategory === cat.id;
+                const count = getCategoryCount(cat.id);
+                const label = cat.id === 'all'
+                  ? (isServiceActive 
+                      ? 'Todos los Servicios' 
+                      : isCommerceActive 
+                      ? 'Todos los Comercios' 
+                      : 'Todos los Rubros')
+                  : cat.label;
+
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setSelectedCategory(cat.id === 'all' ? null : cat.id)}
+                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                      isSelected
+                        ? 'bg-[#ff6b00] text-white shadow-[0_2px_12px_rgba(255,107,0,0.35)] scale-105'
+                        : 'bg-[#151d29] text-zinc-300 hover:bg-[#1c2738] hover:text-white border border-white/5'
+                    }`}
+                  >
+                    {cat.icon}
+                    <span>{label}</span>
+                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-black ${
+                      isSelected ? 'bg-black/30 text-white' : 'bg-white/10 text-zinc-400'
+                    }`}>
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Active Filter Badges Bar */}
+        {(businessType !== 'all' || activeCategory !== 'all' || onlyVerified || searchQuery) && (
+          <div className="flex items-center gap-2 flex-wrap text-xs text-zinc-400 pt-1">
+            <span className="font-semibold text-zinc-500">Filtros activos:</span>
+            
+            {businessType !== 'all' && (
+              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-white font-semibold ${
+                businessType === 'services' || businessType === 'service'
+                  ? 'bg-blue-900/40 border-blue-500/40 text-blue-200'
+                  : 'bg-amber-900/40 border-amber-500/40 text-amber-200'
+              }`}>
+                {businessType === 'services' || businessType === 'service' ? '🔧 Tipo: Servicios' : '🏪 Tipo: Comercios'}
+                <button 
+                  onClick={() => setBusinessType('all')}
+                  className="hover:text-red-400 transition-colors ml-0.5"
+                  title="Quitar filtro"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {activeCategory !== 'all' && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#ff6b00]/15 border border-[#ff6b00]/40 text-orange-200 font-semibold">
+                Rubro: {CATEGORIES.find(c => c.id === activeCategory)?.label || activeCategory}
+                <button 
+                  onClick={() => setSelectedCategory(null)}
+                  className="hover:text-red-400 transition-colors ml-0.5"
+                  title="Quitar filtro"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {onlyVerified && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 font-semibold">
+                Solo verificados
+                <button 
+                  onClick={() => setOnlyVerified(false)}
+                  className="hover:text-red-400 transition-colors ml-0.5"
+                  title="Quitar filtro"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+
+            {searchQuery && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/[0.08] border border-white/20 text-white font-semibold">
+                Búsqueda: "{searchQuery}"
+                <button 
+                  onClick={() => useAppStore.getState().setSearchQuery('')}
+                  className="hover:text-red-400 transition-colors ml-0.5"
+                  title="Quitar filtro"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Main Content (Grid) */}
       {filteredBusinesses.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 items-start">
@@ -514,10 +938,24 @@ export default function HomeView() {
           ))}
         </div>
       ) : (
-        <div className="text-center py-20 bg-[#151515] rounded-3xl border border-white/5">
-          <ShieldCheck className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <h3 className="text-xl font-bold text-white mb-2">No se encontraron resultados</h3>
-          <p className="text-gray-400">Intenta seleccionar otra categoría o cambiar los filtros.</p>
+        <div className="text-center py-16 bg-[#131b26]/60 rounded-3xl border border-white/10 p-8">
+          <ShieldCheck className="w-12 h-12 text-zinc-500 mx-auto mb-4" />
+          <h3 className="text-xl font-bold text-white mb-2">No se encontraron establecimientos</h3>
+          <p className="text-zinc-400 text-sm max-w-md mx-auto mb-6">
+            No hay servicios o comercios que coincidan con los filtros seleccionados actualmente.
+          </p>
+          <button
+            onClick={() => {
+              setBusinessType('all');
+              setSelectedCategory(null);
+              setOnlyVerified(false);
+              useAppStore.getState().setSearchQuery('');
+            }}
+            className="inline-flex items-center gap-2 bg-[#ff6b00] hover:bg-[#ff5500] text-white font-bold py-2.5 px-6 rounded-full text-sm transition-all shadow-[0_4px_16px_rgba(255,107,0,0.35)]"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Restablecer todos los filtros</span>
+          </button>
         </div>
       )}
 

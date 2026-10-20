@@ -2,11 +2,26 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class Business extends Model
 {
+    use HasFactory;
+
     protected $guarded = [];
+
+    protected function casts(): array
+    {
+        return [
+            'verified' => 'boolean',
+            'rating' => 'decimal:2',
+            'reviews_count' => 'integer',
+            'highlights' => 'array',
+            'gallery' => 'array',
+            'payment_methods' => 'array',
+        ];
+    }
 
     public function user()
     {
@@ -26,5 +41,20 @@ class Business extends Model
     public function reviews()
     {
         return $this->hasMany(Review::class);
+    }
+
+    public function promotions()
+    {
+        return $this->hasMany(Promotion::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function messages()
+    {
+        return $this->hasMany(Message::class);
     }
 }

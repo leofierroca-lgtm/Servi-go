@@ -52,41 +52,29 @@ interface AdminStoreState {
   deals: Deal[];
   activeProvidersCount: number;
   
-  approveVerification: (id: string) => void;
-  rejectVerification: (id: string, notes?: string) => void;
+  fetchVerifications: () => Promise<void>;
+  approveVerification: (id: string) => Promise<void>;
+  rejectVerification: (id: string, notes?: string) => Promise<void>;
   warnChat: (id: string) => void;
   resolveChat: (id: string) => void;
   addDeal: (deal: Deal) => void;
   addVerification: (verification: Omit<PendingVerification, 'id' | 'status' | 'submittedAt'>) => void;
 }
 
-export const useAdminStore = create<AdminStoreState>((set) => ({
+export const useAdminStore = create<AdminStoreState>((set, get) => ({
   activeProvidersCount: 342,
   verifications: [
     {
-      id: 'ver_001',
-      providerId: 'prov_99',
-      businessName: 'Asados El Gordo',
+      id: 'ver_7',
+      providerId: '7',
+      businessName: 'Asados El Gordo (Pendiente de Aprobación)',
       applicantName: 'Juan Fernando Castro',
       categoryId: 'comidas_tipicas',
-      categoryName: 'Comidas Típicas',
+      categoryName: 'Comidas Típicas & Quesillos',
       municipality: 'Yaguará',
       documentType: 'Cédula de Ciudadanía',
       documentNumber: '1075333444',
       submittedAt: new Date(Date.now() - 86400000).toISOString(),
-      status: 'pending',
-    },
-    {
-      id: 'ver_002',
-      providerId: 'prov_105',
-      businessName: 'Droguería La Principal',
-      applicantName: 'Lucía Fernández',
-      categoryId: 'salud',
-      categoryName: 'Droguerías',
-      municipality: 'Yaguará',
-      documentType: 'RUT',
-      documentNumber: '900112233-4',
-      submittedAt: new Date(Date.now() - 172800000).toISOString(),
       status: 'pending',
     }
   ],
@@ -118,13 +106,13 @@ export const useAdminStore = create<AdminStoreState>((set) => ({
     {
       id: 'deal_001',
       conversationId: 'chat_12',
-      providerId: 'comidas_tipicas_0',
-      providerName: 'Asadero & Restaurante 1',
+      providerId: '1',
+      providerName: 'Food Factory',
       consumerName: 'Carlos Mendoza',
-      title: 'Pedido Quesillo Familiar x3',
-      amount: 78000,
+      title: 'Hamburguesa Especial Artesanal x2',
+      amount: 36000,
       commissionRate: 0.05,
-      commissionAmount: 3900,
+      commissionAmount: 1800,
       status: 'confirmed',
       createdAt: new Date(Date.now() - 14400000).toISOString(),
       municipality: 'Yaguará'
@@ -132,45 +120,79 @@ export const useAdminStore = create<AdminStoreState>((set) => ({
     {
       id: 'deal_002',
       conversationId: 'chat_15',
-      providerId: 'transporte_0',
-      providerName: 'Transporte Yaguará-Neiva',
+      providerId: '2',
+      providerName: 'Budaphone',
       consumerName: 'Diana Torres',
-      title: 'Viaje Redondo Neiva',
-      amount: 120000,
+      title: 'Diagnóstico Especializado de Celular',
+      amount: 10000,
       commissionRate: 0.05,
-      commissionAmount: 6000,
+      commissionAmount: 500,
       status: 'confirmed',
       createdAt: new Date(Date.now() - 28800000).toISOString(),
       municipality: 'Yaguará'
-    },
-    {
-      id: 'deal_003',
-      conversationId: 'chat_20',
-      providerId: 'maestros_1',
-      providerName: 'Guillermo Borrero Construcciones',
-      consumerName: 'Pedro Salinas',
-      title: 'Instalación de Porcelanato (Anticipo)',
-      amount: 450000,
-      commissionRate: 0.05,
-      commissionAmount: 22500,
-      status: 'confirmed',
-      createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
-      municipality: 'Yaguará'
     }
   ],
-  
-  approveVerification: (id) => set((state) => ({
-    verifications: state.verifications.map(v => 
-      v.id === id ? { ...v, status: 'approved' } : v
-    ),
-    activeProvidersCount: state.activeProvidersCount + 1
-  })),
 
-  rejectVerification: (id, notes) => set((state) => ({
-    verifications: state.verifications.map(v => 
-      v.id === id ? { ...v, status: 'rejected', notes } : v
-    )
-  })),
+  fetchVerifications: async () => {
+    try {
+      const res = await fetch('/api/admin/verifications');
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          set({ verifications: data });
+        }
+      }
+    } catch (err) {
+      console.warn('Error fetching verifications from API:', err);
+    }
+  },
+  
+  approveVerification: async (id) => {
+    // 1. Immediate optimistic UI update
+    set((state) => ({
+      verifications: state.verifications.map(v => 
+        v.id === id ? { ...v, status: 'approved' } : v
+      ),
+      activeProvidersCount: state.activeProvidersCount + 1
+    }));
+
+    // 2. Persist to Laravel MySQL backend
+    try {
+      await fetch(`/api/admin/verifications/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ status: 'approved' })
+      });
+    } catch (err) {
+      console.warn('Error syncing approval with API:', err);
+    }
+  },
+
+  rejectVerification: async (id, notes) => {
+    // 1. Immediate optimistic UI update
+    set((state) => ({
+      verifications: state.verifications.map(v => 
+        v.id === id ? { ...v, status: 'rejected', notes } : v
+      )
+    }));
+
+    // 2. Persist to Laravel MySQL backend
+    try {
+      await fetch(`/api/admin/verifications/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ status: 'rejected', notes })
+      });
+    } catch (err) {
+      console.warn('Error syncing rejection with API:', err);
+    }
+  },
 
   warnChat: (id) => set((state) => ({
     flaggedChats: state.flaggedChats.map(c => 

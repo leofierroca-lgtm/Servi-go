@@ -19,11 +19,16 @@ export default function AdminDashboard() {
     verifications, 
     flaggedChats, 
     deals, 
+    fetchVerifications,
     approveVerification,
     rejectVerification,
     warnChat,
     resolveChat
   } = useAdminStore();
+
+  React.useEffect(() => {
+    fetchVerifications();
+  }, [fetchVerifications]);
 
   // Calculated Metrics
   const totalGMV = deals.reduce((acc, deal) => acc + deal.amount, 0);

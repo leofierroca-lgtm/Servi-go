@@ -37,47 +37,74 @@ export default function AuthModal() {
 
   const navigate = useNavigate();
 
+  const register = useAuthStore((state) => state.register);
+  const [authError, setAuthError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   if (!isAuthModalOpen) return null;
 
-  const handleLoginSubmit = (e) => {
+  const handleLoginSubmit = async (e) => {
     e.preventDefault();
-    login({ email }); // Store logic determines role based on email
-    
-    // Auto-navigate based on user role
-    if (email === DEMO_USERS.delivery.email) {
-      navigate('/delivery');
-    } else if (email === DEMO_USERS.admin.email) {
-      navigate('/admin');
-    } else if (email === DEMO_USERS.provider.email) {
-      navigate(`/provider/${DEMO_USERS.provider.businessId}`);
+    setIsSubmitting(true);
+    setAuthError('');
+    try {
+      await login({ email, password });
+      const currentRole = useAuthStore.getState().role;
+
+      // Auto-navigate based on user role
+      if (currentRole === 'delivery' || email === DEMO_USERS.delivery.email) {
+        navigate('/delivery');
+      } else if (currentRole === 'admin' || email === DEMO_USERS.admin.email) {
+        navigate('/admin');
+      } else if (currentRole === 'provider' || email === DEMO_USERS.provider.email) {
+        const busId = useAuthStore.getState().user?.businessId || DEMO_USERS.provider.businessId;
+        navigate(`/provider/${busId}`);
+      }
+    } catch (err) {
+      setAuthError('Error al iniciar sesión. Revisa tus credenciales.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleRegisterSubmit = (e) => {
+  const handleRegisterSubmit = async (e) => {
     e.preventDefault();
-    login({
-      id: `user_${Date.now()}`,
-      name: regName || 'Nuevo Usuario',
-      email: regEmail || 'usuario@yaguara.com',
-      phone: regPhone || '310 000 0000',
-      address: regAddress || 'Zona Centro, Yaguará'
-    }, 'client');
+    setIsSubmitting(true);
+    setAuthError('');
+    try {
+      const res = await register({
+        name: regName || 'Nuevo Usuario',
+        email: regEmail,
+        password: regPassword || 'password',
+        phone: regPhone || '310 000 0000',
+        address: regAddress || 'Zona Centro, Yaguará',
+        role: 'client'
+      });
+      if (res && !res.success) {
+        setAuthError(res.message);
+      }
+    } catch (err) {
+      setAuthError('Error al procesar el registro.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleFillDemoCredentials = (role) => {
     setIsLogin(true);
+    setAuthError('');
     if (role === 'admin') {
       setEmail(DEMO_USERS.admin.email);
-      setPassword('admin123');
+      setPassword('password');
     } else if (role === 'provider') {
       setEmail(DEMO_USERS.provider.email);
-      setPassword('prov123');
+      setPassword('password');
     } else if (role === 'delivery') {
       setEmail(DEMO_USERS.delivery.email);
-      setPassword('repartidor123');
+      setPassword('password');
     } else {
       setEmail(DEMO_USERS.client.email);
-      setPassword('cliente123');
+      setPassword('password');
     }
   };
 
@@ -153,6 +180,12 @@ export default function AuthModal() {
             Registrarse
           </button>
         </div>
+
+        {authError && (
+          <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl text-xs font-semibold text-center">
+            {authError}
+          </div>
+        )}
 
         {/* Formulario de Inicio de Sesión */}
         {isLogin ? (

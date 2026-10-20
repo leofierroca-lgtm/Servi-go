@@ -26,6 +26,7 @@ import {
 
 export default function DeliveryProfileView() {
   const deliveries = useDeliveryStore(state => state.deliveries);
+  const fetchOrders = useDeliveryStore(state => state.fetchOrders);
   const markAsDeliveredStore = useDeliveryStore(state => state.markAsDelivered);
   const updateDeliveryStatus = useDeliveryStore(state => state.updateDeliveryStatus);
   
@@ -34,6 +35,12 @@ export default function DeliveryProfileView() {
   const [activeTab, setActiveTab] = useState('active'); // 'active', 'history'
   const [isOnline, setIsOnline] = useState(true);
   const [showWallet, setShowWallet] = useState(false);
+
+  useEffect(() => {
+    if (fetchOrders) {
+      fetchOrders();
+    }
+  }, [fetchOrders]);
 
   useEffect(() => {
     if (showScanner) {

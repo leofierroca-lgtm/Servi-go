@@ -171,6 +171,37 @@ export default function CartDrawer() {
       time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     };
 
+    // Save order in Laravel MySQL backend
+    try {
+      const token = localStorage.getItem('servigo_token');
+      fetch('/api/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({
+          businessId: provider?.id || 1,
+          customerName: registeredName,
+          customerPhone: registeredPhone,
+          customerAddress: deliveryMode === 'delivery' ? deliveryAddress : 'Recoge en tienda',
+          paymentMethod: currentPaymentInfo.name,
+          subtotal: subtotalProducts,
+          deliveryFee: deliveryFee,
+          totalAmount: total,
+          items: items.map(it => ({
+            productId: it.id,
+            name: it.name,
+            price: it.price,
+            quantity: it.quantity
+          }))
+        })
+      }).catch(err => console.warn('Order API sync error:', err));
+    } catch (e) {
+      // Ignore background fetch error
+    }
+
     setConfirmedOrder(newOrder);
     clearCart();
     setCheckoutStep('success');

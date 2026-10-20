@@ -6,7 +6,7 @@ const MUNICIPALITIES = [
   'Yaguará'
 ];
 
-export default function LocationSelector({ isOpen, onClose }) {
+export default function LocationSelector({ isOpen = true, onClose }) {
   const { location, setLocation } = useAppStore();
   const [isLocating, setIsLocating] = useState(false);
   const [filter, setFilter] = useState('');

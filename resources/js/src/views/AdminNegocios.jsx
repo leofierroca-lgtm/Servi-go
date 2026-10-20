@@ -3,8 +3,12 @@ import { CheckCircle2, XCircle, FileText } from 'lucide-react';
 import { useAdminStore } from '../store/useAdminStore';
 
 export default function AdminNegocios() {
-  const { verifications, approveVerification, rejectVerification } = useAdminStore();
+  const { verifications, fetchVerifications, approveVerification, rejectVerification } = useAdminStore();
   const pendingKYC = verifications.filter(v => v.status === 'pending').length;
+
+  React.useEffect(() => {
+    fetchVerifications();
+  }, [fetchVerifications]);
 
   return (
     <div className="space-y-6 font-sans pb-12">

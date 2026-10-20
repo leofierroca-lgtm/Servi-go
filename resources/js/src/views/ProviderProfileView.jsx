@@ -270,9 +270,23 @@ export default function ProviderProfileView() {
   const location = useLocation();
   const { id } = useParams();
   const user = useAuthStore(state => state.user);
+  const [apiBusiness, setApiBusiness] = useState(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    fetch(`/api/businesses/${id}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (isMounted && data && data.name) {
+          setApiBusiness(data);
+        }
+      })
+      .catch(() => {});
+    return () => { isMounted = false; };
+  }, [id]);
   
-  // Find the requested business from the shared mock data
-  const providerData = MOCK_BUSINESSES.find(b => b.id.toString() === id) || MOCK_BUSINESSES[0];
+  // Find the requested business from the API or shared mock data
+  const providerData = apiBusiness || MOCK_BUSINESSES.find(b => b.id.toString() === id) || MOCK_BUSINESSES[0];
 
   const promotions = usePromotionsStore(state => state.promotions);
   const providerPromotions = promotions.filter(p => p.providerId === id && (Date.now() - p.createdAt) < 24 * 60 * 60 * 1000);
