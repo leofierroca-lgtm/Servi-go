@@ -300,8 +300,10 @@ export default function ProviderProfileView() {
           element.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }, 300);
       }
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     }
-  }, [location.hash]);
+  }, [id, location.hash]);
   
   // Enhance the basic mock data with profile-specific fields
   const provider = {

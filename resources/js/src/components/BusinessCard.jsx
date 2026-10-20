@@ -23,6 +23,7 @@ export default function BusinessCard({ business }) {
   };
 
   const handleProfileClick = () => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     navigate(`/provider/${business.id}`);
   };
 

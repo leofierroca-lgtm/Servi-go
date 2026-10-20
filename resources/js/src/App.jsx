@@ -1,6 +1,19 @@
 import React, { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import useAuthStore from './store/useAuthStore';
+
+// Scroll to top on every route change
+const ScrollToTop = () => {
+  const { pathname, hash } = useLocation();
+
+  useEffect(() => {
+    if (!hash) {
+      window.scrollTo(0, 0);
+    }
+  }, [pathname, hash]);
+
+  return null;
+};
 
 // Layouts
 import MainLayout from './layouts/MainLayout';
@@ -80,6 +93,7 @@ function App() {
 
   return (
     <BrowserRouter>
+      <ScrollToTop />
       {/* 
         El AuthModal se mantiene en la raíz (afuera de los layouts) 
         para que pueda sobreponerse sobre cualquier ruta si se dispara 
