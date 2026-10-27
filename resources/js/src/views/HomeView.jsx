@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Utensils, 
   Coffee, 
@@ -60,8 +60,73 @@ const CATEGORIES = [
   { id: 'maestros', label: 'Maestros de Obra', icon: <HardHat className="w-4 h-4 mr-1.5" /> }
 ];
 
+const HERO_SLIDES = [
+  {
+    id: 'mirador-loma-san-pedro',
+    image: '/images/hero_mirador_loma_panorama.png',
+    alt: 'Panorámica del Mirador Loma de San Pedro'
+  },
+  {
+    id: 'cueva-rica',
+    image: '/images/hero_cueva_rica.png',
+    alt: 'Pictografías prehistóricas de Cueva Rica'
+  },
+  {
+    id: 'yaguarasaurus',
+    image: '/images/hero_mural_yaguarasaurus.png',
+    alt: 'Mural fósil de Yaguarasaurus en Yaguará'
+  },
+  {
+    id: 'muelle-puerto-yaguara',
+    image: '/images/hero_muelle_puerto_yaguara.png',
+    alt: 'Muelle de Puerto Yaguará al atardecer'
+  },
+  {
+    id: 'mural-tropical',
+    image: '/images/hero_mural_tropical.png',
+    alt: 'Mural tropical de Yaguará con aves'
+  },
+  {
+    id: 'mural-arte-local',
+    image: '/images/hero_mural_arte_local.png',
+    alt: 'Mural de arte local en una fachada de Yaguará'
+  },
+  {
+    id: 'charco-el-polvo',
+    image: '/images/hero_charco_el_polvo.png',
+    alt: 'Aguas turquesas y naturaleza en El Charco el Polvo'
+  },
+  {
+    id: 'parque-angel-maria-paredes',
+    image: '/images/hero_parque_angel_maria_paredes.png',
+    alt: 'Parque Ángel María Paredes al anochecer en Yaguará'
+  },
+  {
+    id: 'pozas-turquesas',
+    image: '/images/hero_pozas_turquesas.png',
+    alt: 'Pozas turquesas en la selva'
+  }
+];
+
+const HERO_IMAGE_OVERLAY = 'linear-gradient(90deg, #00060c 0%, #00060c 28%, rgba(0, 6, 12, 0.96) 36%, rgba(0, 6, 12, 0.78) 44%, rgba(0, 6, 12, 0.5) 52%, rgba(0, 6, 12, 0.22) 62%, rgba(0, 6, 12, 0) 74%), linear-gradient(0deg, rgba(0, 6, 12, 0.88) 0%, rgba(0, 6, 12, 0) 23%)';
+const HERO_IMAGE_SIDE_MASK = 'linear-gradient(90deg, transparent 0%, rgba(0, 0, 0, 0.22) 10%, rgba(0, 0, 0, 0.68) 24%, #000 42%)';
+
 export default function HomeView() {
   const { location, searchQuery, businessType, setBusinessType, selectedCategory, setSelectedCategory } = useAppStore();
+  const [currentHeroSlide, setCurrentHeroSlide] = useState(0);
+
+  useEffect(() => {
+    if (HERO_SLIDES.length === 0) {
+      return undefined;
+    }
+
+    const timer = setInterval(() => {
+      setCurrentHeroSlide((currentSlide) => (currentSlide + 1) % HERO_SLIDES.length);
+    }, 5000);
+
+    return () => clearInterval(timer);
+  }, []);
+
   const [showMap, setShowMap] = useState(false);
   const [onlyVerified, setOnlyVerified] = useState(false);
   const [isPromoCheckoutOpen, setIsPromoCheckoutOpen] = useState(false);
@@ -198,62 +263,137 @@ export default function HomeView() {
   return (
     <div className="space-y-8">
       
-      {/* Search Header Container (Iglesia de Yaguará Hero) */}
-      <div className="relative rounded-[2rem] overflow-hidden bg-[#090d16] border border-white/10 shadow-2xl group min-h-[340px] flex items-center">
-        
-        {/* Background Church Image & Smooth Transition */}
-        <div className="absolute inset-0 z-0 overflow-hidden">
-          {/* Parque Principal de Yaguará image on the right */}
-          <div 
-            className="absolute right-0 top-0 bottom-0 w-full md:w-[62%] lg:w-[56%] bg-cover bg-[position:75%_center] sm:bg-[position:70%_center] transition-transform duration-1000 group-hover:scale-105"
-            style={{ 
-              backgroundImage: "url('/images/parque_yaguara.jpg')",
-            }}
-          />
+      {/* Hero banner: el contenido permanece fijo y solo cambia la fotografía. */}
+      <div className="group relative isolate flex min-h-[500px] w-full items-center overflow-hidden rounded-[2rem] border border-white/10 bg-[#00060c] shadow-2xl sm:min-h-[430px] xl:aspect-[2025/547] xl:min-h-0">
+        {HERO_SLIDES.map((slide, idx) => (
+          <div
+            key={slide.id}
+            className={`absolute inset-0 h-full w-full transition-opacity duration-1000 ease-in-out ${
+              currentHeroSlide === idx ? 'opacity-100 z-10 pointer-events-auto' : 'opacity-0 z-0 pointer-events-none'
+            }`}
+          >
+            <div
+              className="absolute inset-0 h-full w-full overflow-hidden"
+            >
+              <img
+                src={slide.image}
+                alt={slide.alt}
+                className="absolute right-0 top-0 h-full w-auto max-w-none"
+                style={{
+                  maskImage: HERO_IMAGE_SIDE_MASK,
+                  WebkitMaskImage: HERO_IMAGE_SIDE_MASK,
+                  transform: 'scaleX(1.4)',
+                  transformOrigin: 'right center'
+                }}
+              />
+            </div>
+          </div>
+        ))}
 
-          {/* Smooth dark gradient overlay from left to blend with church */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#090d16] via-[#090d16]/95 md:via-[#090d16]/85 to-transparent w-full md:w-[68%]" />
-          
-          {/* Subtle top and bottom dark vignetting */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#090d16]/70 via-transparent to-[#090d16]/50 pointer-events-none" />
+        <div
+          className="pointer-events-none absolute inset-0 z-[15]"
+          style={{ backgroundImage: HERO_IMAGE_OVERLAY }}
+          aria-hidden="true"
+        />
 
-          {/* Angled curved separator with smooth blur */}
-          <div className="hidden md:block absolute -top-16 -bottom-16 left-[46%] w-28 bg-gradient-to-r from-[#090d16] to-transparent transform -skew-x-12 pointer-events-none blur-[2px]" />
-          <div className="hidden md:block absolute -top-16 bottom-0 left-[50%] w-[1.5px] bg-gradient-to-b from-transparent via-[#ff6b00]/30 to-transparent transform -skew-x-12 blur-[1px] pointer-events-none" />
+        <div className="absolute right-0 top-0 z-20 flex h-16 w-16 items-start justify-end rounded-bl-[2rem] bg-[#ff6b00] p-3 sm:h-20 sm:w-20">
+          <MapPin className="h-6 w-6 fill-white text-white sm:h-8 sm:w-8" aria-hidden="true" />
         </div>
 
-        <div className="relative z-10 p-6 md:p-10 lg:p-12 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8 w-full">
-          <div className="max-w-3xl">
-            {/* Tag / Subheading */}
-            <div className="flex items-center gap-2 mb-3">
-              <MapPin className="w-5 h-5 text-[#ff6b00] fill-[#ff6b00]" />
-              <h4 className="text-[#ff6b00] font-bold text-xs tracking-[0.2em] uppercase">
-                Descubre, apoya y conecta
-              </h4>
+        <div className="relative z-20 w-full px-4 py-10 sm:px-8 lg:px-10">
+          <div className="max-w-[700px]">
+            <div className="mb-4 flex items-center gap-2 text-xs font-black uppercase tracking-[0.2em] text-[#ff6b00] sm:text-sm">
+              <MapPin className="h-4 w-4 fill-[#ff6b00]" aria-hidden="true" />
+              <span>Descubre, apoya y conecta</span>
             </div>
 
-            {/* Main Heading */}
-            <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-black text-white mb-3 leading-tight tracking-tight">
-              Servicios y comercios locales en <span className="text-[#ff6b00]">{location === 'Todo Huila' ? 'el Huila' : location}</span>
-            </h1>
+            <h2 className="max-w-[680px] text-3xl font-black leading-tight text-white sm:text-4xl lg:text-[2.65rem]">
+              Servicios y comercios locales en <span className="text-[#ff6b00]">Yaguará</span>
+            </h2>
 
-            {/* Description */}
-            <p className="text-zinc-300 text-sm sm:text-[15px] max-w-xl leading-relaxed font-normal">
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-white/85 sm:text-[15px]">
               Encuentra lo que necesitas, apoya el talento local y disfruta de las mejores ofertas en un solo lugar.
             </p>
-          </div>
 
-          {/* Register Business CTA Button */}
-          <div className="flex-shrink-0 w-full lg:w-auto flex justify-start lg:justify-end">
-            <Link 
-              to="/register-business" 
-              className="w-full sm:w-auto flex justify-center items-center gap-2.5 bg-gradient-to-r from-[#ff6b00] to-[#ff4500] hover:from-[#ff7700] hover:to-[#ff5500] hover:scale-105 transition-all duration-300 text-white font-bold py-3.5 px-7 rounded-full shadow-[0_4px_25px_rgba(255,107,0,0.45)] whitespace-nowrap text-sm sm:text-base"
-            >
-              <Plus className="w-5 h-5 stroke-[2.5]" /> 
-              <span>Registrar mi negocio</span>
-              <ChevronRight className="w-5 h-5 stroke-[2.5]" />
-            </Link>
+            <div className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-4 sm:gap-x-3">
+              <button
+                type="button"
+                onClick={() => setSelectedCategory('Comercios')}
+                className="flex w-[68px] flex-col items-center gap-1.5 text-center text-[10px] font-semibold leading-tight text-white transition-transform hover:-translate-y-1 sm:w-[82px] sm:text-xs"
+                aria-label="Comercios locales"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#101b25] text-[#ff6b00] sm:h-14 sm:w-14">
+                  <Store className="h-6 w-6 sm:h-7 sm:w-7" aria-hidden="true" />
+                </span>
+                <span>Comercios<br />locales</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedCategory('Servicios')}
+                className="flex w-[68px] flex-col items-center gap-1.5 text-center text-[10px] font-semibold leading-tight text-white transition-transform hover:-translate-y-1 sm:w-[82px] sm:text-xs"
+                aria-label="Servicios profesionales"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#101b25] text-[#ff6b00] sm:h-14 sm:w-14">
+                  <Wrench className="h-6 w-6 sm:h-7 sm:w-7" aria-hidden="true" />
+                </span>
+                <span>Servicios prof.</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedCategory('Restaurantes')}
+                className="flex w-[68px] flex-col items-center gap-1.5 text-center text-[10px] font-semibold leading-tight text-white transition-transform hover:-translate-y-1 sm:w-[82px] sm:text-xs"
+                aria-label="Restaurantes"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#101b25] text-[#ff6b00] sm:h-14 sm:w-14">
+                  <Utensils className="h-6 w-6 sm:h-7 sm:w-7" aria-hidden="true" />
+                </span>
+                <span>Restaurantes</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSelectedCategory(null)}
+                className="flex w-[68px] flex-col items-center gap-1.5 text-center text-[10px] font-semibold leading-tight text-white transition-transform hover:-translate-y-1 sm:w-[82px] sm:text-xs"
+                aria-label="Ver todos los rubros"
+              >
+                <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#101b25] text-[#ff6b00] sm:h-14 sm:w-14">
+                  <Package className="h-6 w-6 sm:h-7 sm:w-7" aria-hidden="true" />
+                </span>
+                <span>Y mucho<br />más...</span>
+              </button>
+
+              <span className="hidden h-14 w-px bg-white/20 sm:block" aria-hidden="true" />
+
+              <Link
+                to="/register-business"
+                className="inline-flex min-h-12 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-gradient-to-r from-[#ff4d00] to-[#ff6b00] px-5 py-3 text-sm font-black text-white shadow-[0_0_24px_rgba(255,107,0,0.35)] transition hover:scale-[1.03] hover:shadow-[0_0_30px_rgba(255,107,0,0.5)] active:scale-95 sm:flex-none sm:px-7 sm:text-base"
+              >
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white text-[#ff6b00]">
+                  <Plus className="h-4 w-4" aria-hidden="true" />
+                </span>
+                Registrar mi negocio
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
+              </Link>
+            </div>
           </div>
+        </div>
+
+        <div className="absolute bottom-4 right-5 z-20 flex items-center gap-1.5 sm:bottom-5 sm:right-8">
+          {HERO_SLIDES.map((slide, idx) => (
+            <button
+              key={slide.id}
+              type="button"
+              onClick={() => setCurrentHeroSlide(idx)}
+              title={`Ver diapositiva ${idx + 1}`}
+              aria-label={`Ver diapositiva ${idx + 1}`}
+              aria-current={currentHeroSlide === idx ? 'true' : undefined}
+              className={`h-2.5 rounded-full transition-all ${
+                currentHeroSlide === idx ? 'w-6 bg-[#ff6b00]' : 'w-2.5 bg-white/60 hover:bg-white'
+              }`}
+            />
+          ))}
         </div>
       </div>
 
